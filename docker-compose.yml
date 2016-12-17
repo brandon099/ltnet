@@ -1,0 +1,33 @@
+version: "2"
+
+services:
+  pixelserv:
+    build: ./pixelserv
+    network_mode: host
+    volumes:
+      - ./pixelserv:/pixelserv
+
+  unbound:
+    build:
+      context: ./unbound
+      args:
+        BLACKLIST_URL: "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-porn/hosts"
+    network_mode: host
+    volumes:
+      - ./unbound/unbound.conf:/etc/unbound/unbound.conf
+    restart: always
+
+  dnscrypt:
+    build: 
+      context: ./dnscrypt
+      args:
+        RESOLVERS_CSV_URL: "https://github.com/jedisct1/dnscrypt-proxy/raw/master/dnscrypt-resolvers.csv"
+    network_mode: host
+    restart: always
+    environment:
+      - DNSCRYPT_RESOLVER=cs-uswest2
+      - DNSCRYPT_LOCAL_ADDR=0.0.0.0:5353
+
+  squid:
+    build: ./squid
+    network_mode: host
