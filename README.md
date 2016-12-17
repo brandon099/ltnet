@@ -5,7 +5,7 @@ Provides pre-configured instances of the following that work together to help pr
 
 `pixelserv` for serving up a 1x1 GIF to any request that has been black-holed in Unbound
 
-`dnscrypt` for DNS encryption using supported  
+`dnscrypt` for DNS encryption using supported DNSCrypt hosts specified in the dnscrypt-resolvers CSV (see below).
 
 `squid` for HTTP caching
 
@@ -29,3 +29,10 @@ Pixelserv is a Python re-implementation of http://proxytunnel.sourceforge.net/fi
 
 ### Squid
 Squid is configured as a froward proxy and listens on 0.0.0.0:3128, so once it's up, simply point your clients there to start caching content served over HTTP.
+
+## Getting Started
+`docker-compose build`
+
+`docker-compose up -d`
+
+Then point your clients to use the Unbound DNS and Squid HTTP forward proxy
