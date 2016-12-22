@@ -28,7 +28,7 @@ DNSCrypt has three options that can be configured from the docker-compose.yml fi
 Pixelserv is a Python re-implementation of http://proxytunnel.sourceforge.net/files/pixelserv-inetd.pl.txt that supports HTTPS.  Unbound is configured to redirect any blacklisted hosts to Pixelserv for an instant response.
 
 ### Squid
-Squid is configured as a froward proxy and listens on 0.0.0.0:3128, so once it's up, simply point your clients there to start caching content served over HTTP.
+Squid is configured as a forward proxy and listens on 0.0.0.0:3128, so once it's up, simply point your clients there to start caching content served over HTTP.
 
 ## Getting Started
 `docker-compose build`
