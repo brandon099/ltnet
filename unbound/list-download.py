@@ -1,12 +1,16 @@
 #!/usr/bin/python
 
+import re
 import os
 import sys
 import logging as log
 from urllib import request
 
-log.basicConfig(level=log.DEBUG, stream=sys.stdout)
+log.basicConfig(format='%(message)s',
+                level=log.DEBUG,
+                stream=sys.stdout)
 
+WHITE_PATH = os.path.abspath('/app/whitelist.txt')
 SKIPS = ('localhost', 'broadcasthost',)
 
 PREFACE = """# generated hosts a-record file
@@ -55,9 +59,36 @@ def download(url):
     return sites
 
 
+def do_whitelisting(sites_set):
+    rules = []
+
+    with open(WHITE_PATH, 'r') as ins_file:
+        for line in ins_file:
+            if line.startswith('#') or not line.strip():
+                continue
+            rule = line.split('#')[0].strip()
+            rules.append(re.compile(rule, re.I))
+
+    log.info('.. %d  whitelist rules', len(rules))
+
+    purge = set()
+
+    for regex in rules:
+        for site in sites_set:
+            if regex.match(site):
+                purge.add(site)
+
+    log.info('.. %d  sites removed via %s', len(purge), WHITE_PATH)
+    sites_set.difference_update(purge)
+
+
 def output_sites(path, sites_set):
     log.debug('..creating file with %d hosts', len(sites_set))
     log.debug('..saving file to, %s', path)
+
+    # do whitelisting
+    if os.path.exists(WHITE_PATH):
+        do_whitelisting(sites_set)
 
     with open(path, 'w') as out_file:
         out_file.write(PREFACE)
@@ -86,4 +117,4 @@ if __name__ == '__main__':
 
     final_total = output_sites(sys.argv[1], all_sites)
 
-    log.debug('..removed %d duplicates', total - final_total)
+    log.debug('.. %d  duplicates removed ', total - final_total)

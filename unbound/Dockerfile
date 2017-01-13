@@ -10,6 +10,7 @@ RUN update-ca-certificates
 RUN mkdir /app
 WORKDIR /app
 COPY ./list-download.py .
+COPY ./whitelist.txt .
 
 RUN python list-download.py /etc/unbound/a-records.conf "$BLACKLIST_URLS"
 
