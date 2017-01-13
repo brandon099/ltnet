@@ -1,12 +1,18 @@
-FROM alpine:latest
+FROM python:3-alpine
 
-ARG BLACKLIST_URL
+USER root
+
+ARG BLACKLIST_URLS
 
 RUN apk add --update --no-cache unbound ca-certificates wget
 RUN update-ca-certificates
-RUN wget "$BLACKLIST_URL" -O /tmp/blacklist-hosts
-RUN cat /tmp/blacklist-hosts | grep '^0\.0\.0\.0' | awk '{print "local-zone: \""$2"\" redirect\nlocal-data: \""$2" A 0.0.0.0\""}' > /etc/unbound/a-records.conf
-RUN rm /tmp/blacklist-hosts
+
+RUN mkdir /app
+WORKDIR /app
+COPY ./list-download.py .
+COPY ./whitelist.txt .
+
+RUN python list-download.py /etc/unbound/a-records.conf "$BLACKLIST_URLS"
 
 ENTRYPOINT ["unbound"]
 CMD ["-d"]

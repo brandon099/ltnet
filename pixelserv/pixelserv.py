@@ -3,6 +3,7 @@
 # A Pixel Server
 
 import logging
+import os
 import socketserver
 import struct, sys, signal, time
 import threading
@@ -10,9 +11,28 @@ import time
 
 from datetime import datetime
 
-logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %I:%M:%S %p', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %I:%M:%S',
+                    filename=os.environ['PIXELSERV_LOGFILE'], level=logging.INFO)
 HOST, PORT = "0.0.0.0", 80
 HOST_TLS, PORT_TLS = "0.0.0.0", 443
+
+
+def parse_request(self):
+    fields = ['verb', 'path', 'version']
+    self.request_data = {f:'' for f in fields}
+
+    line = self.rfile.readline(65536)
+    host = line.rstrip(bytes('\r\n', "utf-8")).split()
+    req = self.data.rstrip(bytes('\r\n', 'utf-8')).split()
+
+    try:
+        if host[1]:
+            self.request_data['host'] = host[1]
+    except Exception:
+        pass
+
+    for idx,field in enumerate(req):
+        self.request_data[fields[idx]] = field
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
@@ -24,20 +44,6 @@ class PixelRequestHandler(socketserver.StreamRequestHandler):
             0, 0, 0, 33, 249, 4, 1, 0, 0, 0, 0, 44, 0, 0, 0, 0, 1, 0, 1,
             0, 0, 2, 2, 68, 1, 0, 59)
 
-    def _parse_request(self):
-        fields = ['verb', 'path', 'version']
-        self.request_data = {f:'' for f in fields}
-
-        line = self.rfile.readline(65536)
-        host = line.rstrip(bytes('\r\n', "utf-8")).split()
-        req = self.data.rstrip(bytes('\r\n', 'utf-8')).split()
-
-        if host[1]:
-            self.request_data['host'] = host[1]
-
-        for idx,field in enumerate(req):
-            self.request_data[fields[idx]] = field
-
     def handle(self):
         S = ("HTTP/1.1 200 OK\r\n"
              "Content-type: image/gif\r\n"
@@ -47,7 +53,7 @@ class PixelRequestHandler(socketserver.StreamRequestHandler):
         self.wfile.write(bytes(S, "utf-8"))
         self.wfile.write(self.pixel)
         self.data = self.rfile.readline(65536)
-        self._parse_request()
+        parse_request(self)
         client_ip   = self.client_address[0]
         decoded_req_data = {k:v.decode("utf-8") for k,v in self.request_data.items()}
         logging.info('{client_ip} {verb} {host}{path}'.format(client_ip=client_ip,**decoded_req_data))
@@ -64,6 +70,11 @@ class TLSRequestHandler(socketserver.StreamRequestHandler):
             '\x31') # 0x31 == TLS access denied (49)
 
         self.wfile.write(bytes(''.join(S), "utf-8"))
+        self.data = self.rfile.readline(65536)
+        parse_request(self)
+        client_ip   = self.client_address[0]
+        logging.info('{client_ip} - - (TLS)'.format(client_ip=client_ip))
+        sys.stdout.flush()
 
 def sighandler(signal, frame):
     raise Exception('Recieved %s signal' % signal)

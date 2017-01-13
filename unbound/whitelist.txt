@@ -1,0 +1,17 @@
+#
+#   All domains represented in this file will be removed from
+#   the final blacklist before it's compiled and submitted with
+#   the unbound conf.
+#
+#   Each line can be represented as a compiled regex string.
+#   All domains are in lowercase, and anything that passes a
+#   `REGEX.match(..)` will be removed.
+#
+#   Comments after expressions are ok. Everything after,
+#    and including, `#` will be stripped/ignored.
+#
+#   Examples:
+#
+#       Newegg + NeweggFlash get blocked:      ^.*\.newegg.*\.com$
+#       University mail:                       ^mail\..*\.edu$
+#
