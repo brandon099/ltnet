@@ -1,11 +1,11 @@
 FROM python:3-alpine
 
 RUN apk add --no-cache g++ git linux-headers make zlib-dev
-RUN pip install sanic
+RUN pip install uvloop
 
-COPY pixelsrv_libuv.py /pixelsrv.py
+COPY pixelsrv.py /pixelsrv.py
 
-ENV LOGPATH "/pixelserv/access.log"
+ENV LOGPATH "/pixelsrv/access.log"
 ENV HTTP_HOST "0.0.0.0"
 ENV HTTPS_HOST "0.0.0.0"
 ENV HTTP_PORT "8000"

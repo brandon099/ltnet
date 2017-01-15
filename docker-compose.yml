@@ -1,13 +1,13 @@
 version: "2"
 
 services:
-  pixelserv:
-    build: ./pixelserv
+  pixelsrv:
+    build: ./pixelsrv
     network_mode: host
     volumes:
-      - ./pixelserv:/pixelserv
+      - ./pixelsrv:/pixelsrv
     environment:
-      - LOGPATH=/pixelserv/access.log
+      - LOGPATH=/pixelsrv/access.log
       - HTTP_PORT=80
       - HTTPS_PORT=443
 
