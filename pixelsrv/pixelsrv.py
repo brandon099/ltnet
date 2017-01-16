@@ -9,7 +9,7 @@ import time
 import struct
 import asyncio
 import logging
-from logging.handlers import TimedRotatingFileHandler
+from logging.handlers import RotatingFileHandler
 from multiprocessing import Process
 
 import uvloop
@@ -22,8 +22,8 @@ if not os.path.exists(folder):
     os.makedirs(folder)
 
 # create an access log handler for GoAccess
-formatter = logging.Formatter('%(created)f %(processName)-16s %(message)s')
-handler = TimedRotatingFileHandler(LOG_PATH, when='d', interval=1, backupCount=32)
+formatter = logging.Formatter('%(message)s')
+handler = RotatingFileHandler(LOG_PATH, maxBytes=500000, backupCount=5)
 handler.setFormatter(formatter)
 log = logging.getLogger('pix')
 log.addHandler(handler)
@@ -43,7 +43,7 @@ PIXEL_RESPONSE = (b'HTTP/1.1 200 OK',
                   b'',
                   PIXEL_GIF)
 PIXEL_RESPONSE = b'\r\n'.join(PIXEL_RESPONSE)
-TLS_NO_ACCESS = struct.pack(
+TLS_ACCESS_DENIED = struct.pack(
     '<7B',
     0x15, 0x03, 0, 0, 0x02, 0x02, 0x31)
 
@@ -80,30 +80,36 @@ class BaseProtocol(asyncio.Protocol):
 
 
 class HTTPPixelProtocol(BaseProtocol):
-    LOG_TEMPLATE = '200 43 {time:.9f} {peer} {host}{route} "{user_agent}"'
+    LOG_TEMPLATE = '{peer} [{time}] {host} "{method} {route} {protocol}/{version}" 200 43 "{user_agent}" {process_name}'
 
     def data_received(self, data):
         http_data = process_data(data)
         self.transport.write(PIXEL_RESPONSE)
         self.transport.close()
         log.info(self.LOG_TEMPLATE.format(
-            time=time.time() - self.start_time,
             peer=self.peer[0],
+            time=time.strftime("%d/%b/%Y:%H:%M:%S %z", time.localtime(time.time())),
             host=http_data['Host'],
+            method=http_data['Method'],
             route=http_data['Route'],
-            user_agent=http_data['User-Agent']
+            protocol=http_data['Protocol'],
+            version=http_data['Version'],
+            user_agent=http_data['User-Agent'],
+            process_name="pixelsrv"
         ))
 
 
 class TLSNullProtocol(BaseProtocol):
-    LOG_TEMPLATE = '200 7 {time:.9f} {peer} TLS'
+    LOG_TEMPLATE = '{peer} [{time}] Unknown "GET unknown HTTP/1.1" 200 7 "Unknown" {process_name}'
 
     def data_received(self, data):
-        self.transport.write(TLS_NO_ACCESS)
+        self.transport.write(TLS_ACCESS_DENIED)
         self.transport.close()
         log.info(self.LOG_TEMPLATE.format(
-            time=time.time() - self.start_time,
-            peer=self.peer[0]
+            peer=self.peer[0],
+            time=time.strftime("%d/%b/%Y:%H:%M:%S %z",
+                               time.localtime(time.time())),
+            process_name="pixelsrv-tls"
         ))
 
 
