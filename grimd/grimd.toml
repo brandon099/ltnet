@@ -1,0 +1,69 @@
+# version this config was generated from
+version = "1.0.2"
+
+# list of sources to pull blocklists from, stores them in ./sources
+sources = [
+"https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn/hosts",
+"http://sysctl.org/cameleon/hosts",
+"https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist",
+"https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt",
+"https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt",
+"http://hosts-file.net/ad_servers.txt",
+"https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext",
+"https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt"
+]
+
+# list of locations to recursively read blocklists from (warning, every file found is assumed to be a hosts-file or domain list)
+sourcedirs = [
+"/etc/grimd-blacklists"
+]
+
+# location of the log file
+log = "/var/log/grimd.log"
+
+# what kind of information should be logged, 0 = errors and important operations, 1 = dns queries, 2 = debug
+loglevel = 0
+
+# address to bind to for the DNS server
+bind = "0.0.0.0:53"
+
+# address to bind to for the API server
+api = "0.0.0.0:8080"
+
+# ipv4 address to forward blocked queries to
+nullroute = "0.0.0.0"
+
+# ipv6 address to forward blocked queries to
+nullroutev6 = "0:0:0:0:0:0:0:0"
+
+# nameservers to forward queries to
+nameservers = ["127.0.0.1:5353"]
+
+# concurrency interval for lookups in miliseconds
+interval = 200
+
+# query timeout for dns lookups in seconds
+timeout = 5
+
+# cache entry lifespan in seconds
+expire = 604800
+
+# cache capacity, 0 for infinite
+maxcount = 0
+
+# question cache capacity, 0 for infinite but not recommended (this is used for storing logs)
+questioncachecap = 5000
+
+# manual blocklist entries
+blocklist = []
+
+# manual whitelist entries
+whitelist = []
+
+# When this string is queried, toggle grimd on and off
+togglename = ""
+
+# If not zero, the delay in seconds before grimd automaticall reactivates after
+# having been turned off.
+reactivationdelay = 300
+

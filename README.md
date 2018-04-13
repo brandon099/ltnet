@@ -1,38 +1,41 @@
 # docker-ltnet
 Provides pre-configured instances of the following that work together to help provide a snappier and safer network.
 
-`unbound` for DNS caching and blackholing
+`grimd` for DNS caching and blackholing
+https://github.com/looterz/grimd
 
-`pixelserv` for serving up a 1x1 GIF to any request that has been black-holed in Unbound
+`reaper` for showing statistics on DNS queries to `grimd`
+https://github.com/looterz/reaper
 
-`dnscrypt` for DNS encryption using supported DNSCrypt hosts specified in the dnscrypt-resolvers CSV (see below).
+`nullserv` for serving up a 1x1 GIF to any request that has been black-holed in Unbound
+https://github.com/bmrzycki/nullserv
 
-`squid` for HTTP caching
+`dnscrypt-proxy` for DNS over TLS.
+https://github.com/jedisct1/dnscrypt-proxy
 
- All of these images are based on Alpine Linux to keep image size minimal.
+All of these images are based on Alpine Linux to keep image size minimal. The `grimd` and `nullserve` Dockerfile's use multi-stage builds to keep the final image small. You can safely remove the build specific images and save some space.
 
-### Unbound
-Unbound has been configured to cache DNS requests and then forward them on to DNSCrypt.
+### grimd
+Grimd has been configured to cache DNS requests, blackhole blacklisted requests, and forward good requests on to DNSCrypt-proxy.
+grimd listens on 0.0.0.0:53 for DNS and 0.0.0.0:8080 for API (used by `reaper` to show stats and perform light controls)
+You must edit the NULLSERV_IP arg in the docker-compose.yml file to ensure your nullroute is set to the properly nullroute blackisted requests.
 
-`BLACKLIST_URL`: You can use any list provided at https://github.com/StevenBlack/hosts, and it will format the file for Unbound at container build time. To update the list, or use another, you can simply re-build this image.
+### dnscrypt-proxy
+dnscrypt-proxy has a config file you can use to customize its settings.
+dnscrypt-proxy listens on 0.0.0.0:5353 (DNSCrypt-proxy)
 
-unbound listens on 0.0.0.0:53 and forwards requests to 0.0.0.0:5353 (DNSCrypt), and 
+### nullserv
+nullserv is a Golang re-implementation of http://proxytunnel.sourceforge.net/files/pixelserv-inetd.pl.txt that supports HTTPS, and many file types to speed your network up.
+grimd is configured to redirect any blacklisted hosts to nullserv for an instant response.
+nullserv listens on 0.0.0.0:80 and 0.0.0.0:443
 
-### DNSCrypt
-DNSCrypt has three options that can be configured from the docker-compose.yml file:
-- `RESOLVERS_CSV_URL`: Defaults to the up-to-date CSV maintained at https://github.com/jedisct1/dnscrypt-proxy/raw/master/dnscrypt-resolvers.csv
-- `DNSCRYPT_RESOLVER`: The name of the resolver from the dnscrypt-resolvers.csv
-- `DNSCRYPT_LOCAL_ADDR`: Address and port to run DNSCrypt on. Defaults to 0.0.0.0:5353. *(If this is updated, you also need to update the Unbound config.)*
-
-### Pixelserv
-Pixelserv is a Python re-implementation of http://proxytunnel.sourceforge.net/files/pixelserv-inetd.pl.txt that supports HTTPS.  Unbound is configured to redirect any blacklisted hosts to Pixelserv for an instant response.
-
-### Squid
-Squid is configured as a forward proxy and listens on 0.0.0.0:3128, so once it's up, simply point your clients there to start caching content served over HTTP.
+### reaper
+You must edit the GRIMD_API_URL in the docker-compose.yml for reaper -- this tells the UI where the grimd API is at so it can pull the data, and since it is client side, it must be an address your computer has access to.
+Default listens on 0.0.0.0:8081. Update the Caddyfile if you want it to be available on another port.
 
 ## Getting Started
 `docker-compose build`
 
 `docker-compose up -d`
 
-Then point your clients to use the Unbound DNS and Squid HTTP forward proxy
+Then point your clients to use Grimd as it's resolver

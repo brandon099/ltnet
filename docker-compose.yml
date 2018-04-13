@@ -1,51 +1,39 @@
 version: "2"
 
 services:
-  pixelsrv:
-    build: ./pixelsrv
+  nullserv:
+    build: ./nullserv
+    network_mode: host
+    restart: always
+
+  dnscrypt-proxy:
+    build:
+      context: ./dnscrypt-proxy
     network_mode: host
     volumes:
-      - ./pixelsrv:/pixelsrv
-    # Update the ports here if 80 and 443 are already in use
-    # by your machine (reverse proxy for example)
-    environment:
-      - LOGPATH=/pixelsrv/access.log
-      - HTTP_PORT=80
-      - HTTPS_PORT=443
+      - ./dnscrypt-proxy/dnscrypt-proxy.toml:/etc/dnscrypt-proxy/dnscrypt-proxy.toml
+    restart: always
 
-  unbound:
+  grimd:
     build:
-      context: ./unbound
+      context: ./grimd
       args:
-        # This can be a list of host files, newline separated,
-        # wrapped in the same quotes and dupes will be removed
-        # automatically
-        BLACKLIST_URLS: "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn/hosts"
+        NULLSERV_IP: "10.0.1.2"
     network_mode: host
+    depends_on:
+      - "nullserv"
+      - "dnscrypt-proxy"
     volumes:
-      - ./unbound/unbound.conf:/etc/unbound/unbound.conf
+      - ./grimd/blacklists:/etc/grimd-blacklists/
     restart: always
 
-  dnscrypt:
+  reaper:
     build:
-      context: ./dnscrypt
+      context: ./reaper
       args:
-        RESOLVERS_CSV_URL: "https://github.com/jedisct1/dnscrypt-proxy/raw/master/dnscrypt-resolvers.csv"
+        # This needs to be set to the IP address or hostname the Grimd API is hosted on
+        GRIMD_API_URL: "10.0.1.2:8080"
     network_mode: host
-    restart: always
-    # Pick a resolver that is closer to you for faster encrypted DNS lookups
-    environment:
-      - DNSCRYPT_RESOLVER=cs-uswest2
-      - DNSCRYPT_LOCAL_ADDR=0.0.0.0:5444
+    depends_on: 
+      - "grimd"
 
-  shadowsocks:
-    build:
-      context: ./shadowsocks
-    # Update the -k flag to a secure password before building and running
-    command: -p 8443 -k p@SsW0rD -m aes-128-cfb
-    network_mode: host
-    restart: always
-
-  squid:
-    build: ./squid
-    network_mode: host
