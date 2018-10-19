@@ -12,6 +12,6 @@ RUN git clone https://github.com/looterz/grimd.git && \
 FROM scratch
 ADD https://curl.haxx.se/ca/cacert.pem /etc/ssl/certs/ca-certificates.crt
 COPY --from=build-env /go/src/app/grimd/grimd /
-COPY ./grimd.toml /etc/grimd.toml
+COPY ./grimd.toml /grimd.toml
 
 ENTRYPOINT ["/grimd"]

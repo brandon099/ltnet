@@ -40,9 +40,7 @@ grimd is configured to redirect any blacklisted hosts to nullserv for an instant
 nullserv listens on 0.0.0.0:80 and 0.0.0.0:443 by default.
  
 ### reaper
-_You must edit the GRIMD_API_URL arg value in the docker-compose.yml for reaper._
-
-Listens on 0.0.0.0:8081.
+Listens on 0.0.0.0:8081. Edit `reaper/config.js` API URI setting to point to where your Grimd API is running.
  
 ## Getting Started
 `docker-compose build`

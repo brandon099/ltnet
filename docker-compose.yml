@@ -28,9 +28,6 @@ services:
   reaper:
     build:
       context: ./reaper
-      args:
-        # This needs to be set to the IP address or hostname the Grimd API is hosted on
-        GRIMD_API_URL: "10.0.1.2:8080"
     network_mode: host
     depends_on: 
       - "grimd"

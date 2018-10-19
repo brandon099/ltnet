@@ -20,7 +20,7 @@ sourcedirs = [
 ]
 
 # location of the log file
-log = "/var/log/grimd.log"
+log = "/grimd.log"
 
 # what kind of information should be logged, 0 = errors and important operations, 1 = dns queries, 2 = debug
 loglevel = 0
@@ -32,7 +32,7 @@ bind = "0.0.0.0:53"
 api = "0.0.0.0:8080"
 
 # ipv4 address to forward blocked queries to
-nullroute = "0.0.0.0"
+nullroute = "10.0.1.2"
 
 # ipv6 address to forward blocked queries to
 nullroutev6 = "0:0:0:0:0:0:0:0"
