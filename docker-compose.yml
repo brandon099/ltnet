@@ -17,8 +17,6 @@ services:
   grimd:
     build:
       context: ./grimd
-      args:
-        NULLSERV_IP: "10.0.1.2"
     network_mode: host
     depends_on:
       - "nullserv"

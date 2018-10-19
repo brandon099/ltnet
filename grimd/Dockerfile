@@ -1,19 +1,17 @@
 # build stage
 FROM golang:alpine AS build-env
+WORKDIR /go/src/app
 RUN apk update && apk upgrade && \
-    apk add --no-cache bash git openssh
-RUN git clone https://github.com/looterz/grimd.git
-RUN cd grimd && go get -d -v && go build
+    apk add --no-cache git gcc musl-dev
+RUN git clone https://github.com/looterz/grimd.git && \
+    cd grimd && go get -d -v && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -a -installsuffix cgo -ldflags="-w -s" -o grimd
 
 # final stage
-FROM alpine
-
-ARG NULLSERV_IP
-
-WORKDIR /app
-RUN apk add --no-cache ca-certificates && update-ca-certificates
-COPY --from=build-env /go/grimd/grimd /app/
+FROM scratch
+ADD https://curl.haxx.se/ca/cacert.pem /etc/ssl/certs/ca-certificates.crt
+COPY --from=build-env /go/src/app/grimd/grimd /
 COPY ./grimd.toml /etc/grimd.toml
-RUN sed -i -e "s/nullroute = \"0.0.0.0\"/nullroute = \"$NULLSERV_IP\"/g" /etc/grimd.toml
 
-ENTRYPOINT /app/grimd -update -config /etc/grimd.toml
+ENTRYPOINT ["/grimd"]
